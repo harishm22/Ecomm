@@ -1,5 +1,7 @@
 package com.simpleecom.apigateway.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +23,8 @@ import java.util.Optional;
  */
 @Configuration
 public class RateLimiterConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(RateLimiterConfig.class);
 
     /**
      * Rate limit by client IP address.
@@ -111,7 +115,7 @@ public class RateLimiterConfig {
             }
         } catch (Exception e) {
             // If JWT parsing fails, return null → fallback to IP-based rate limiting
-            System.err.println("[RateLimiter] Could not extract username from JWT: " + e.getMessage());
+            log.warn("Could not extract username from JWT: {}", e.getMessage());
         }
         return null;
     }

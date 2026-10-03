@@ -15,10 +15,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -50,12 +52,13 @@ public class AuthController {
     public ResponseEntity<?> registerUser(
             @Valid @RequestBody com.simpleecom.userservice.payload.RegistrationRequest signUpRequest) {
         try {
-            System.out.println(
-                    "[DEBUG] Register request: " + signUpRequest.getUsername() + " / " + signUpRequest.getEmail());
+            log.info("Register request received for username={}, email={}", signUpRequest.getUsername(), signUpRequest.getEmail());
             if (userRepository.existsByUsername(signUpRequest.getUsername())) {
+                log.warn("Registration rejected: username {} already taken", signUpRequest.getUsername());
                 return ResponseEntity.badRequest().body(new ErrorResponse("Error: Username is already taken!"));
             }
             if (userRepository.existsByEmail(signUpRequest.getEmail())) {
+                log.warn("Registration rejected: email {} already in use", signUpRequest.getEmail());
                 return ResponseEntity.badRequest().body(new ErrorResponse("Error: Email is already in use!"));
             }
 
@@ -92,10 +95,10 @@ public class AuthController {
             user.setRoles(roles);
             user.setEnabled(true);
             userRepository.save(user);
-            System.out.println("[DEBUG] User saved: " + user.getUsername());
+            log.info("User registered successfully: username={}", user.getUsername());
             return ResponseEntity.ok(new ErrorResponse("User registered successfully!"));
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Error during registration for username={}: {}", signUpRequest.getUsername(), e.getMessage(), e);
             return ResponseEntity.status(500).body(new ErrorResponse("Error: " + e.getMessage()));
         }
     }
@@ -107,6 +110,7 @@ public class AuthController {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtUtil.generateJwtToken(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        log.info("User authentication successful: username={}", userDetails.getUsername());
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername(), userDetails.getAuthorities()));
     }
 

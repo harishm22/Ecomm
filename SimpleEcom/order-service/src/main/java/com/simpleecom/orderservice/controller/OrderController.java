@@ -2,6 +2,8 @@ package com.simpleecom.orderservice.controller;
 
 import com.simpleecom.orderservice.model.Order;
 import com.simpleecom.orderservice.service.OrderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,6 +13,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/orders")
 public class OrderController {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderController.class);
 
     private final OrderService orderService;
 
@@ -33,14 +37,13 @@ public class OrderController {
                 order.setIdempotencyKey(headerKey.trim());
             }
 
-            System.out.println("[OrderController] Processing order for: " + order.getCustomerName() +
-                    (order.getIdempotencyKey() != null ? " [IdempotencyKey: " + order.getIdempotencyKey() + "]" : ""));
+            log.info("Processing order for customer={}, idempotencyKey={}",
+                    order.getCustomerName(), order.getIdempotencyKey());
             Order savedOrder = orderService.createOrder(order);
-            System.out.println("[OrderController] Order processed successfully with ID: " + savedOrder.getId());
+            log.info("Order processed successfully with id={}, totalAmount={}", savedOrder.getId(), savedOrder.getTotal());
             return ResponseEntity.ok(savedOrder);
         } catch (Exception e) {
-            System.err.println("[OrderController] Error creating order: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error creating order for customer {}: {}", order.getCustomerName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("Error creating order: " + e.getMessage());
         }
     }
@@ -49,9 +52,10 @@ public class OrderController {
     public ResponseEntity<List<Order>> getAllOrders() {
         try {
             List<Order> orders = orderService.getAllOrders();
+            log.debug("Fetched {} orders", orders.size());
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            System.err.println("[OrderController] Error getting all orders: " + e.getMessage());
+            log.error("Error getting all orders: {}", e.getMessage(), e);
             return ResponseEntity.status(500).build();
         }
     }
@@ -60,9 +64,10 @@ public class OrderController {
     public ResponseEntity<List<Order>> getOrdersByUsername(@PathVariable String username) {
         try {
             List<Order> orders = orderService.getOrdersByUsername(username);
+            log.debug("Fetched {} orders for user {}", orders.size(), username);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            System.err.println("[OrderController] Error getting orders for user " + username + ": " + e.getMessage());
+            log.error("Error getting orders for user {}: {}", username, e.getMessage(), e);
             return ResponseEntity.status(500).build();
         }
     }
@@ -78,9 +83,10 @@ public class OrderController {
     public ResponseEntity<List<Order>> getOrdersByAdmin(@PathVariable String adminUsername) {
         try {
             List<Order> orders = orderService.getOrdersByAdminUsername(adminUsername);
+            log.debug("Fetched {} orders for admin {}", orders.size(), adminUsername);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
-            System.err.println("[OrderController] Error getting orders for admin " + adminUsername + ": " + e.getMessage());
+            log.error("Error getting orders for admin {}: {}", adminUsername, e.getMessage(), e);
             return ResponseEntity.status(500).build();
         }
     }
@@ -90,12 +96,14 @@ public class OrderController {
         try {
             String status = payload.get("status");
             if (status == null || status.trim().isEmpty()) {
+                log.warn("Update order status rejected for order id={}: Status is required", id);
                 return ResponseEntity.badRequest().body("Status is required");
             }
+            log.info("Updating order id={} to status={}", id, status);
             Order updatedOrder = orderService.updateOrderStatus(id, status);
             return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
-            System.err.println("[OrderController] Error updating order status: " + e.getMessage());
+            log.error("Error updating order status for id={}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }

@@ -1,11 +1,13 @@
 package com.simpleecom.userservice;
 
 import com.simpleecom.userservice.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+@Slf4j
 @SpringBootApplication
 public class UserServiceApplication {
 
@@ -20,7 +22,7 @@ public class UserServiceApplication {
                 if (!user.isEnabled()) {
                     user.setEnabled(true);
                     userRepository.save(user);
-                    System.out.println("Enabled user: " + user.getUsername());
+                    log.info("Enabled user: {}", user.getUsername());
                 }
             });
         };
