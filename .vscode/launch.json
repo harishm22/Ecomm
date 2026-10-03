@@ -9,7 +9,8 @@
             "projectName": "api-gateway",
             "args": "",
             "envFile": "${workspaceFolder}/.env",
-            "vmArgs": " -Dcom.sun.management.jmxremote"
+            "vmArgs": " -Dcom.sun.management.jmxremote",
+            "javaExec": "C:\\Program Files\\Java\\jdk-23\\bin\\java.exe"
         },
         {
             "type": "java",
@@ -30,7 +31,8 @@
             "projectName": "eureka-server",
             "args": "",
             "envFile": "${workspaceFolder}/.env",
-            "vmArgs": " -Dcom.sun.management.jmxremote"
+            "vmArgs": " -Dcom.sun.management.jmxremote",
+            "javaExec": "C:\\Program Files\\Java\\jdk-23\\bin\\java.exe"
         },
         {
             "type": "java",
@@ -51,7 +53,8 @@
             "mainClass": "com.simpleecom.userservice.UserServiceApplication",
             "projectName": "user-service",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "javaExec": "C:\\Program Files\\Java\\jdk-23\\bin\\java.exe"
         },
         {
             "type": "java",
@@ -61,7 +64,8 @@
             "mainClass": "com.simpleecom.orderservice.OrderServiceApplication",
             "projectName": "order-service",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "javaExec": "C:\\Program Files\\Java\\jdk-23\\bin\\java.exe"
         }
     ]
 }

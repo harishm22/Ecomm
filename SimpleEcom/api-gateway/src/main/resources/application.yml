@@ -6,10 +6,11 @@ spring:
     name: api-gateway
 
   # ── Redis connection (required for rate limiting token bucket storage) ──
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-    # password: ${REDIS_PASSWORD:}   # Uncomment if Redis has a password
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      # password: ${REDIS_PASSWORD:}   # Uncomment if Redis has a password
 
   cloud:
     gateway:

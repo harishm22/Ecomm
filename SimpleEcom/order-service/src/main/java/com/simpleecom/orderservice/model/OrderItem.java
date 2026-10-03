@@ -1,7 +1,7 @@
 package com.simpleecom.orderservice.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "order_items")
