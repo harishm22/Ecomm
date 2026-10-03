@@ -65,5 +65,12 @@ Desktop.ini
 # Logs & Temp Files
 # ===============================
 *.log
+**/logs/
 /tmp/
 /temp/
+
+# ===============================
+# Markdown Documentation Files
+# ===============================
+*.md
+**/*.md

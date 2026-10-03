@@ -40,7 +40,8 @@
             "mainClass": "com.simpleecom.productservice.ProductServiceApplication",
             "projectName": "product-service",
             "args": "",
-            "envFile": "${workspaceFolder}/.env"
+            "envFile": "${workspaceFolder}/.env",
+            "javaExec": "C:\\Program Files\\Java\\jdk-23\\bin\\java.exe"
         },
         {
             "type": "java",
