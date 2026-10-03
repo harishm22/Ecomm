@@ -90,14 +90,28 @@ import { AdminSidebarComponent } from './admin-sidebar.component';
                 <!-- Status Select Dropdown & Total -->
                 <div class="order-status-group">
                   <div class="status-select-wrap">
-                    <label class="status-label">Update Status:</label>
-                    <div class="select-container" [attr.data-status]="order.status">
+                    <label class="status-label">{{ (order.status === 'cancelled' || order.status === 'delivered') ? 'Status:' : 'Update Status:' }}</label>
+                    
+                    <!-- Terminal State: Cancelled -->
+                    <div *ngIf="order.status === 'cancelled'" class="terminal-status-badge cancelled-badge">
+                      <span class="status-dot"></span>
+                      <span>Cancelled</span>
+                    </div>
+
+                    <!-- Terminal State: Delivered -->
+                    <div *ngIf="order.status === 'delivered'" class="terminal-status-badge delivered-badge">
+                      <span class="status-dot"></span>
+                      <span>Delivered</span>
+                    </div>
+
+                    <!-- Active States: Editable -->
+                    <div *ngIf="order.status !== 'cancelled' && order.status !== 'delivered'" class="select-container" [attr.data-status]="order.status">
                       <select [value]="order.status" (change)="updateOrderStatus(order, $event)">
                         <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
                         <option value="shipped">Shipped</option>
                         <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="cancelled">Cancel Order</option>
                       </select>
                     </div>
                   </div>
@@ -641,6 +655,43 @@ import { AdminSidebarComponent } from './admin-sidebar.component';
       border-color: #a855f7;
       background: #ffffff;
       box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    }
+
+    .terminal-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    .cancelled-badge {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1.5px solid #fecaca;
+    }
+
+    .cancelled-badge .status-dot {
+      background: #dc2626;
+    }
+
+    .delivered-badge {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1.5px solid #bbf7d0;
+    }
+
+    .delivered-badge .status-dot {
+      background: #16a34a;
     }
 
     .order-total-box {
@@ -1375,6 +1426,10 @@ export class OrderManagementComponent implements OnInit {
   }
 
   updateOrderStatus(order: Order, event: any): void {
+    if (order.status === 'cancelled') {
+      alert('This order has already been cancelled and cannot be modified.');
+      return;
+    }
     const newStatus = event.target.value;
     this.orderService.updateOrderStatus(order.id, newStatus).subscribe({
       next: () => {

@@ -28,9 +28,9 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/api/orders/health").permitAll()
-                        .requestMatchers("/api/orders/**").authenticated()
+                        .requestMatchers("/api/orders/**").permitAll()
                         .requestMatchers("/api/cart/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(management -> management
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));

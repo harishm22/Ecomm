@@ -2,6 +2,7 @@ package com.simpleecom.orderservice.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 
 @Entity
 @Table(name = "order_items")
@@ -11,12 +12,15 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotNull(message = "Product ID is required")
     private Long productId;
 
+    @NotBlank(message = "Product name is required")
     private String productName;
 
     private String category;
 
+    @Min(value = 1, message = "Quantity must be at least 1")
     private int quantity;
 
     private double price;

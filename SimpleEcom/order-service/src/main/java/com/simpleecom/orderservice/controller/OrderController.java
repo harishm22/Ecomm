@@ -4,6 +4,7 @@ import com.simpleecom.orderservice.model.Order;
 import com.simpleecom.orderservice.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(
-            @RequestBody Order order,
+            @Valid @RequestBody Order order,
             @RequestHeader(value = "Idempotency-Key", required = false) String headerKey) {
         try {
             // Hybrid pattern: Use HTTP header if provided, otherwise use JSON body property

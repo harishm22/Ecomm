@@ -2,6 +2,8 @@ package com.simpleecom.orderservice.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,20 +16,29 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Customer name is required")
     private String customerName;
 
     private String username;
 
+    @NotBlank(message = "Email is required")
+    @Email(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$", message = "Invalid email format (must include domain like .com, .in)")
     private String email;
 
+    @NotBlank(message = "Phone number is required")
+    @Pattern(regexp = "^(\\+91[\\-\\s]?)?[6-9]\\d{9}$", message = "Phone number must be a 10-digit Indian number starting with 6, 7, 8, or 9 (optional +91 prefix)")
     private String phone;
 
+    @NotBlank(message = "Street is required")
     private String street;
 
+    @NotBlank(message = "City is required")
     private String city;
 
+    @NotBlank(message = "State is required")
     private String state;
 
+    @NotBlank(message = "Zip code is required")
     private String zipCode;
 
     private String country;
@@ -48,6 +59,8 @@ public class Order {
     @Column(name = "idempotency_key", unique = true, length = 64)
     private String idempotencyKey;
 
+    @NotEmpty(message = "Order must contain at least one item")
+    @Valid
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();

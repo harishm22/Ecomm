@@ -75,7 +75,11 @@ public class OrderService {
         Optional<Order> orderOpt = orderRepository.findById(orderId);
         if (orderOpt.isPresent()) {
             Order order = orderOpt.get();
-            order.setStatus(status.toLowerCase().trim());
+            String normalized = status.toLowerCase().trim();
+            if (normalized.equals(order.getStatus())) {
+                return order;
+            }
+            order.setStatus(normalized);
             return orderRepository.save(order);
         }
         throw new RuntimeException("Order not found with id: " + orderId);

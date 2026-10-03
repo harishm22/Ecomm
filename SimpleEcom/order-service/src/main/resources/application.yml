@@ -21,6 +21,8 @@ eureka:
     enabled: true
     service-url:
       defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    prefer-ip-address: true
 
 jwt:
   secret: ${JWT_SECRET:mySecretKey1234567890}

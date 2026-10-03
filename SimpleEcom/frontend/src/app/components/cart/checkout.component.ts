@@ -90,7 +90,11 @@ import { CartItem } from '../../models/product.model';
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                       <polyline points="22,6 12,13 2,6"></polyline>
                     </svg>
-                    <input type="email" formControlName="email" placeholder="" required>
+                    <input type="email" formControlName="email" placeholder="example@domain.com" required>
+                  </div>
+                  <div *ngIf="deliveryForm.get('email')?.touched && deliveryForm.get('email')?.invalid" class="field-error">
+                    <span *ngIf="deliveryForm.get('email')?.errors?.['required']">Email address is required.</span>
+                    <span *ngIf="deliveryForm.get('email')?.errors?.['pattern']">Please enter a valid email with a domain (e.g. name&#64;gmail.com).</span>
                   </div>
                 </div>
 
@@ -101,6 +105,10 @@ import { CartItem } from '../../models/product.model';
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
                     <input type="tel" formControlName="phone" placeholder="+91 " required>
+                  </div>
+                  <div *ngIf="deliveryForm.get('phone')?.touched && deliveryForm.get('phone')?.invalid" class="field-error">
+                    <span *ngIf="deliveryForm.get('phone')?.errors?.['required']">Phone number is required.</span>
+                    <span *ngIf="deliveryForm.get('phone')?.errors?.['pattern']">Must be a valid 10-digit number starting with 6, 7, 8, or 9.</span>
                   </div>
                 </div>
               </div>
@@ -119,17 +127,23 @@ import { CartItem } from '../../models/product.model';
               <div class="form-row-3">
                 <div class="form-group">
                   <label>City <span class="req">*</span></label>
-                  <input type="text" class="standard-input" formControlName="city" placeholder="" required>
+                  <input type="text" class="standard-input" formControlName="city" list="city-suggestions" placeholder="" required>
+                  <datalist id="city-suggestions">
+                    <option *ngFor="let suggestion of citySuggestions" [value]="suggestion"></option>
+                  </datalist>
                 </div>
 
                 <div class="form-group">
                   <label>State / Province <span class="req">*</span></label>
-                  <input type="text" class="standard-input" formControlName="state" placeholder="" required>
+                  <select class="standard-input" formControlName="state" required>
+                    <option value="" disabled selected>Select State</option>
+                    <option *ngFor="let state of indianStates" [value]="state">{{ state }}</option>
+                  </select>
                 </div>
 
                 <div class="form-group">
                   <label>ZIP / Postal Code <span class="req">*</span></label>
-                  <input type="text" class="standard-input" formControlName="zipCode" placeholder="" required>
+                  <input type="text" class="standard-input" formControlName="zipCode" placeholder="" required (input)="onZipCodeChange($event)">
                 </div>
               </div>
 
@@ -510,6 +524,14 @@ import { CartItem } from '../../models/product.model';
       box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
     }
 
+    .field-error {
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+
     .submit-order-cta {
       display: none; /* Shown on small screens */
       width: 100%;
@@ -783,6 +805,14 @@ export class CheckoutComponent implements OnInit {
   deliveryForm: FormGroup;
   isSubmitting: boolean = false;
 
+  indianStates = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana', 
+    'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 
+    'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 
+    'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands', 'Chandigarh', 
+    'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+  ];
+
   constructor(
     private fb: FormBuilder,
     private cartService: CartService,
@@ -794,14 +824,131 @@ export class CheckoutComponent implements OnInit {
     this.deliveryForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      phone: ['+91 ', Validators.required],
+      email: ['', [Validators.required, Validators.pattern(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)]],
+      phone: ['+91 ', [Validators.required, Validators.pattern(/^(\+91[\-\s]?)?[6-9]\d{9}$/)]],
       address: ['', Validators.required],
       city: ['', Validators.required],
       state: ['', Validators.required],
       zipCode: ['', Validators.required],
       instructions: ['']
     });
+  }
+
+  citySuggestions: string[] = [];
+
+  onZipCodeChange(event: any): void {
+    const zip = (event.target.value || '').trim();
+    if (zip && zip.length === 6 && /^\d{6}$/.test(zip)) {
+      fetch(`https://api.postalpincode.in/pincode/${zip}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+            const postOffices: any[] = data[0].PostOffice;
+            const resolvedCity = this.resolveCityName(postOffices);
+            const resolvedState = this.matchState(postOffices[0].State);
+
+            // Collect unique locality and area suggestions for the datalist dropdown
+            const suggestions = new Set<string>();
+            if (resolvedCity) suggestions.add(resolvedCity);
+            postOffices.forEach(po => {
+              if (po.Name) suggestions.add(this.cleanName(po.Name));
+              if (po.Block && po.Block !== 'NA') suggestions.add(this.cleanName(po.Block));
+              if (po.District) suggestions.add(this.cleanName(po.District));
+            });
+            this.citySuggestions = Array.from(suggestions).filter(s => s && s.length > 1);
+
+            this.deliveryForm.patchValue({
+              city: resolvedCity || this.cleanName(postOffices[0].District),
+              state: resolvedState
+            });
+          }
+        })
+        .catch(err => console.error('Error fetching pincode details', err));
+    }
+  }
+
+  private cleanName(name: string): string {
+    if (!name) return '';
+    return name
+      .replace(/\s*\(.*?\)\s*/g, ' ')
+      .replace(/\s+(H\.?O\.?|S\.?O\.?|B\.?O\.?|G\.?P\.?O\.?)$/i, '')
+      .trim();
+  }
+
+  private resolveCityName(postOffices: any[]): string {
+    if (!postOffices || postOffices.length === 0) return '';
+
+    // 1. Head Post Office (H.O.) is virtually always named after the principal city
+    const headOffice = postOffices.find(po => po.BranchType === 'Head Post Office');
+    if (headOffice && headOffice.Name) {
+      const cleanHead = this.cleanName(headOffice.Name);
+      if (cleanHead && cleanHead.length > 2) {
+        return cleanHead;
+      }
+    }
+
+    const first = postOffices[0];
+    const district = (first.District || '').trim();
+
+    // 2. Known district-to-city mappings in India
+    const districtToCity: Record<string, string> = {
+      'Gautam Buddha Nagar': 'Noida',
+      'Ernakulam': 'Kochi',
+      'Kamrup': 'Guwahati',
+      'Kamrup Metropolitan': 'Guwahati',
+      'Khordha': 'Bhubaneswar',
+      'Khorda': 'Bhubaneswar',
+      'S.A.S Nagar': 'Mohali',
+      'K.V.Rangareddy': 'Hyderabad',
+      'Rangareddy': 'Hyderabad',
+      'Medchal Malkajgiri': 'Hyderabad',
+      'Central Delhi': 'New Delhi',
+      'North Delhi': 'New Delhi',
+      'South Delhi': 'New Delhi',
+      'East Delhi': 'New Delhi',
+      'West Delhi': 'New Delhi',
+      'North East Delhi': 'New Delhi',
+      'North West Delhi': 'New Delhi',
+      'South West Delhi': 'New Delhi'
+    };
+
+    if (districtToCity[district]) {
+      // Check if Greater Noida specific post office
+      const hasGreaterNoida = postOffices.some(po => 
+        (po.Name && po.Name.toLowerCase().includes('greater noida')) || 
+        (po.Block && po.Block.toLowerCase().includes('greater noida'))
+      );
+      if (hasGreaterNoida && district === 'Gautam Buddha Nagar') {
+        return 'Greater Noida';
+      }
+      return districtToCity[district];
+    }
+
+    // 3. Division hints
+    if (first.Division) {
+      const divLower = first.Division.toLowerCase();
+      if (divLower.includes('new mumbai') || divLower.includes('navi mumbai')) {
+        return 'Navi Mumbai';
+      }
+    }
+
+    // 4. Block name if valid and not administrative
+    if (first.Block && first.Block !== 'NA' && !/corporation|north|south|east|west|taluk|tehsil/i.test(first.Block)) {
+      return this.cleanName(first.Block);
+    }
+
+    // 5. Default fallback to clean district
+    return this.cleanName(district);
+  }
+
+  private matchState(apiState: string): string {
+    if (!apiState) return '';
+    const trimmed = apiState.trim().toLowerCase();
+    const match = this.indianStates.find(s => s.toLowerCase() === trimmed);
+    if (match) return match;
+    if (trimmed === 'orissa') return 'Odisha';
+    if (trimmed === 'pondicherry') return 'Puducherry';
+    return this.indianStates.find(s => s.toLowerCase().includes(trimmed) || trimmed.includes(s.toLowerCase())) || apiState;
   }
 
   ngOnInit(): void {
@@ -841,7 +988,8 @@ export class CheckoutComponent implements OnInit {
             ...item,
             price: currentPrice,
             productName: product ? product.name : `Product #${item.productId}`,
-            category: product ? product.category : 'General'
+            category: product ? product.category : 'General',
+            adminUsername: product ? product.adminUsername : undefined
           };
         });
       },
@@ -849,7 +997,8 @@ export class CheckoutComponent implements OnInit {
         this.cartItemsWithNames = this.cartItems.map(item => ({
           ...item,
           productName: `Product #${item.productId}`,
-          category: 'General'
+          category: 'General',
+          adminUsername: undefined
         }));
       }
     });

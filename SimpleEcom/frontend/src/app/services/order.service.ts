@@ -235,33 +235,42 @@ export class OrderService {
     const orderToUpdate = currentOrders.find(order => order.id === orderId);
     const previousStatus = orderToUpdate ? orderToUpdate.status : null;
 
-    // Handle inventory sync on status transition
-    if (orderToUpdate && status === 'cancelled' && previousStatus !== 'cancelled') {
-      this.revertStockQuantities(orderToUpdate);
-    } else if (orderToUpdate && previousStatus === 'cancelled' && status !== 'cancelled') {
-      this.reduceStockQuantities(orderToUpdate.items);
+    // Prevent duplicate cancellation and repeated stock increases
+    if (orderToUpdate && orderToUpdate.status === 'cancelled' && status === 'cancelled') {
+      console.warn(`[OrderService] Order #${orderId} is already cancelled. Ignoring duplicate cancel.`);
+      return of({ success: true, alreadyCancelled: true });
     }
 
-    // Update local state immediately
-    const updatedOrders = currentOrders.map(order => 
-      order.id === orderId ? { ...order, status: status as any } : order
-    );
-    this.ordersSubject.next(updatedOrders);
-    this.saveOrdersToStorage(updatedOrders);
-    window.dispatchEvent(new CustomEvent('stockUpdated'));
-
-    // Send update to backend
+    // Send update to backend first
     return this.http.put(`${this.apiUrl}/${orderId}/status`, { status }, { headers: this.getHeaders() }).pipe(
       catchError(() => this.http.put(`${this.directApiUrl}/${orderId}/status`, { status }, { headers: this.getHeaders() })),
-      catchError(err => {
-        console.warn('[OrderService] Backend status update fallback:', err);
-        return of({ success: true, localOnly: true });
+      tap((updatedOrder: any) => {
+        // Backend confirmed status update, now synchronize stock and local state
+        if (orderToUpdate && status === 'cancelled' && previousStatus !== 'cancelled') {
+          this.revertStockQuantities(orderToUpdate);
+        } else if (orderToUpdate && previousStatus === 'cancelled' && status !== 'cancelled') {
+          this.reduceStockQuantities(orderToUpdate.items);
+        }
+
+        const updatedOrders = this.ordersSubject.value.map(order => 
+          order.id === orderId ? { ...order, status: status as any } : order
+        );
+        this.ordersSubject.next(updatedOrders);
+        this.saveOrdersToStorage(updatedOrders);
+        window.dispatchEvent(new CustomEvent('stockUpdated'));
       })
     );
   }
 
   deleteOrder(orderId: number): Observable<any> {
     const currentOrders = this.ordersSubject.value;
+    const orderToDelete = currentOrders.find(order => order.id === orderId);
+
+    // Revert stock if deleting an active (non-cancelled) order
+    if (orderToDelete && orderToDelete.status !== 'cancelled') {
+      this.revertStockQuantities(orderToDelete);
+    }
+
     const updatedOrders = currentOrders.filter(order => order.id !== orderId);
     this.ordersSubject.next(updatedOrders);
     this.saveOrdersToStorage(updatedOrders);
