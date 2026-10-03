@@ -1,0 +1,9 @@
+{
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.import.maven.enabled": true,
+    "java.jdt.ls.vmargs": "-javaagent:C:/Users/Harish/.m2/repository/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar",
+    "workbench.editorAssociations": {
+        "*.md": "vscode.markdown.preview.editor"
+    }
+}

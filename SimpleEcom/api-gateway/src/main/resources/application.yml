@@ -1,0 +1,188 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  # ── Redis connection (required for rate limiting token bucket storage) ──
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+    # password: ${REDIS_PASSWORD:}   # Uncomment if Redis has a password
+
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # ── Route definitions with Rate Limiting + Circuit Breaker ──
+      # Filter order matters! RequestRateLimiter runs FIRST, then CircuitBreaker.
+      # If rate limited → 429 immediately, circuit breaker never touched.
+      routes:
+
+        # ── Auth routes (STRICTEST rate limit: 5 req/sec, burst 10) ──
+        # Why strictest? Login/register are brute-force attack targets.
+        # Rate limited by IP (user isn't authenticated yet).
+        - id: user-service-auth
+          uri: lb://user-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5       # 5 tokens added per second
+                redis-rate-limiter.burstCapacity: 10      # max 10 tokens in bucket
+                redis-rate-limiter.requestedTokens: 1     # each request costs 1 token
+                key-resolver: "#{@ipKeyResolver}"         # rate limit by IP address
+                deny-empty-key: false                     # don't deny if key can't be resolved
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/userService
+
+        # ── Admin routes (moderate: 10 req/sec, burst 15) ──
+        - id: user-service-admin
+          uri: lb://user-service
+          predicates:
+            - Path=/api/admin/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 15
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"       # rate limit by JWT username
+                deny-empty-key: false
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/userService
+
+        # ── User profile routes (moderate: 10 req/sec, burst 20) ──
+        - id: user-service-user
+          uri: lb://user-service
+          predicates:
+            - Path=/api/user/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
+            - name: CircuitBreaker
+              args:
+                name: userServiceCircuitBreaker
+                fallbackUri: forward:/fallback/userService
+
+        # ── Product routes (RELAXED: 20 req/sec, burst 40) ──
+        # Why relaxed? Products are read-heavy (browsing), legitimate users
+        # make many rapid requests when scrolling/filtering.
+        - id: product-service
+          uri: lb://product-service
+          predicates:
+            - Path=/api/products/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
+            - name: CircuitBreaker
+              args:
+                name: productServiceCircuitBreaker
+                fallbackUri: forward:/fallback/productService
+
+        # ── Order routes (moderate: 10 req/sec, burst 20) ──
+        # Prevents spam order creation.
+        - id: order-service
+          uri: lb://order-service
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
+            - name: CircuitBreaker
+              args:
+                name: orderServiceCircuitBreaker
+                fallbackUri: forward:/fallback/orderService
+
+        # ── Cart routes (moderate: 15 req/sec, burst 30) ──
+        # Cart gets frequent updates (add/remove items).
+        - id: cart-service
+          uri: lb://cart-service
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 15
+                redis-rate-limiter.burstCapacity: 30
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@userKeyResolver}"
+                deny-empty-key: false
+            - name: CircuitBreaker
+              args:
+                name: cartServiceCircuitBreaker
+                fallbackUri: forward:/fallback/cartService
+
+# ── Eureka Service Discovery ──
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+
+# ── Resilience4j Circuit Breaker Config (unchanged) ──
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
+        sliding-window-type: COUNT_BASED
+    instances:
+      userServiceCircuitBreaker:
+        base-config: default
+      productServiceCircuitBreaker:
+        base-config: default
+      cartServiceCircuitBreaker:
+        base-config: default
+      orderServiceCircuitBreaker:
+        base-config: default
+
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 20s
+    instances:
+      userServiceCircuitBreaker:
+        base-config: default
+      productServiceCircuitBreaker:
+        base-config: default
+      cartServiceCircuitBreaker:
+        base-config: default
+      orderServiceCircuitBreaker:
+        base-config: default
