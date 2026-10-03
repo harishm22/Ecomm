@@ -1,5 +1,6 @@
 package com.simpleecom.productservice.controller;
 
+import com.simpleecom.productservice.dto.StockReductionRequest;
 import com.simpleecom.productservice.model.Product;
 import com.simpleecom.productservice.service.ProductService;
 import org.springframework.http.ResponseEntity;
@@ -100,7 +101,7 @@ public class ProductController {
     }
 
     @PostMapping("/reduce-stock")
-    public ResponseEntity<?> reduceStock(@RequestBody List<com.simpleecom.productservice.dto.StockReductionRequest> items) {
+    public ResponseEntity<?> reduceStock(@RequestBody List<StockReductionRequest> items) {
         try {
             productService.reduceStock(items);
             return ResponseEntity.ok("Stock reduced successfully");
@@ -111,7 +112,7 @@ public class ProductController {
     }
 
     @PostMapping("/revert-stock")
-    public ResponseEntity<?> revertStock(@RequestBody List<com.simpleecom.productservice.dto.StockReductionRequest> items) {
+    public ResponseEntity<?> revertStock(@RequestBody List<StockReductionRequest> items) {
         try {
             productService.revertStock(items);
             return ResponseEntity.ok("Stock reverted successfully");

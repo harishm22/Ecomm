@@ -1,5 +1,6 @@
 package com.simpleecom.productservice.service;
 
+import com.simpleecom.productservice.dto.StockReductionRequest;
 import com.simpleecom.productservice.model.Product;
 import com.simpleecom.productservice.repository.ProductRepository;
 import org.springframework.core.ParameterizedTypeReference;
@@ -140,11 +141,11 @@ public class ProductService {
         return productRepository.findByAdminUsernameIgnoreCase(adminUsername.trim());
     }
 
-    public void reduceStock(List<com.simpleecom.productservice.dto.StockReductionRequest> items) {
+    public void reduceStock(List<StockReductionRequest> items) {
         if (items == null || items.isEmpty()) {
             return;
         }
-        for (com.simpleecom.productservice.dto.StockReductionRequest item : items) {
+        for (StockReductionRequest item : items) {
             if (item.getProductId() != null && item.getQuantity() > 0) {
                 Optional<Product> productOpt = productRepository.findById(item.getProductId());
                 if (productOpt.isPresent()) {
@@ -158,11 +159,11 @@ public class ProductService {
         }
     }
 
-    public void revertStock(List<com.simpleecom.productservice.dto.StockReductionRequest> items) {
+    public void revertStock(List<StockReductionRequest> items) {
         if (items == null || items.isEmpty()) {
             return;
         }
-        for (com.simpleecom.productservice.dto.StockReductionRequest item : items) {
+        for (StockReductionRequest item : items) {
             if (item.getProductId() != null && item.getQuantity() > 0) {
                 Optional<Product> productOpt = productRepository.findById(item.getProductId());
                 if (productOpt.isPresent()) {

@@ -44,9 +44,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 5       # 5 tokens added per second
-                redis-rate-limiter.burstCapacity: 10      # max 10 tokens in bucket
-                redis-rate-limiter.requestedTokens: 1     # each request costs 1 token
+                'redis-rate-limiter.replenishRate': 5       # 5 tokens added per second
+                'redis-rate-limiter.burstCapacity': 10      # max 10 tokens in bucket
+                'redis-rate-limiter.requestedTokens': 1     # each request costs 1 token
                 key-resolver: "#{@ipKeyResolver}"         # rate limit by IP address
                 deny-empty-key: false                     # don't deny if key can't be resolved
             - name: CircuitBreaker
@@ -62,9 +62,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 15
-                redis-rate-limiter.requestedTokens: 1
+                'redis-rate-limiter.replenishRate': 10
+                'redis-rate-limiter.burstCapacity': 15
+                'redis-rate-limiter.requestedTokens': 1
                 key-resolver: "#{@userKeyResolver}"       # rate limit by JWT username
                 deny-empty-key: false
             - name: CircuitBreaker
@@ -80,9 +80,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                'redis-rate-limiter.replenishRate': 10
+                'redis-rate-limiter.burstCapacity': 20
+                'redis-rate-limiter.requestedTokens': 1
                 key-resolver: "#{@userKeyResolver}"
                 deny-empty-key: false
             - name: CircuitBreaker
@@ -100,9 +100,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 20
-                redis-rate-limiter.burstCapacity: 40
-                redis-rate-limiter.requestedTokens: 1
+                'redis-rate-limiter.replenishRate': 20
+                'redis-rate-limiter.burstCapacity': 40
+                'redis-rate-limiter.requestedTokens': 1
                 key-resolver: "#{@userKeyResolver}"
                 deny-empty-key: false
             - name: CircuitBreaker
@@ -119,9 +119,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                'redis-rate-limiter.replenishRate': 10
+                'redis-rate-limiter.burstCapacity': 20
+                'redis-rate-limiter.requestedTokens': 1
                 key-resolver: "#{@userKeyResolver}"
                 deny-empty-key: false
             - name: CircuitBreaker
@@ -138,9 +138,9 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
-                redis-rate-limiter.replenishRate: 15
-                redis-rate-limiter.burstCapacity: 30
-                redis-rate-limiter.requestedTokens: 1
+                'redis-rate-limiter.replenishRate': 15
+                'redis-rate-limiter.burstCapacity': 30
+                'redis-rate-limiter.requestedTokens': 1
                 key-resolver: "#{@userKeyResolver}"
                 deny-empty-key: false
             - name: CircuitBreaker
