@@ -4,6 +4,7 @@ import com.simpleecom.userservice.model.Role;
 import com.simpleecom.userservice.model.User;
 import com.simpleecom.userservice.repository.RoleRepository;
 import com.simpleecom.userservice.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
+@Slf4j
 @Component
 public class RoleDataInitializer implements CommandLineRunner {
 
@@ -40,7 +42,7 @@ public class RoleDataInitializer implements CommandLineRunner {
         for (String roleName : Arrays.asList("ROLE_USER", "ROLE_ADMIN", "ROLE_SUPERADMIN")) {
             if (!roleRepository.findByName(roleName).isPresent()) {
                 roleRepository.save(new Role(roleName));
-                System.out.println("Created role: " + roleName);
+                log.info("Initialized role: {}", roleName);
             }
         }
 
@@ -50,7 +52,7 @@ public class RoleDataInitializer implements CommandLineRunner {
             superAdmin.getRoles().add(superAdminRole);
             superAdmin.setEnabled(true);
             userRepository.save(superAdmin);
-            System.out.println("SuperAdmin user created: " + superadminUsername);
+            log.info("SuperAdmin user created: username={}", superadminUsername);
         }
     }
 }

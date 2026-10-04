@@ -10,8 +10,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
+
 public class Product {
 
     @Id
@@ -32,7 +31,22 @@ public class Product {
 
     private String category;
 
-    // Manual getters and setters in case Lombok doesn't work
+    public Product() {
+    }
+
+    public Product(Long id, String name, String description, double price, int quantity, String adminUsername,
+            String imageUrl, String category) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity;
+        this.adminUsername = adminUsername;
+        this.imageUrl = imageUrl;
+        this.category = category;
+    }
+
+    // Manual getters and setters
     public Long getId() {
         return id;
     }

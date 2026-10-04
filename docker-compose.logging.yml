@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  loki:
+    image: grafana/loki:3.0.0
+    container_name: simpleecom-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml
+    restart: unless-stopped
+    networks:
+      - logging-net
+
+  alloy:
+    image: grafana/alloy:latest
+    container_name: simpleecom-alloy
+    ports:
+      - "12345:12345" # Alloy UI
+    volumes:
+      - ./monitoring/alloy/config.alloy:/etc/alloy/config.alloy
+      - ./SimpleEcom:/var/log/services/SimpleEcom:ro
+      - ./logs:/var/log/services/logs:ro
+    command: run --server.http.listen-addr=0.0.0.0:12345 /etc/alloy/config.alloy
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - logging-net
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: simpleecom-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - loki
+    restart: unless-stopped
+    networks:
+      - logging-net
+
+networks:
+  logging-net:
+    driver: bridge

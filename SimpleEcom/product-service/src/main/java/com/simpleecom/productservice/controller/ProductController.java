@@ -3,6 +3,8 @@ package com.simpleecom.productservice.controller;
 import com.simpleecom.productservice.dto.StockReductionRequest;
 import com.simpleecom.productservice.model.Product;
 import com.simpleecom.productservice.service.ProductService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/products")
 public class ProductController {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     private final ProductService productService;
 
@@ -23,13 +27,12 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public ResponseEntity<?> addProduct(@RequestBody Product product) {
         try {
-            System.out.println("Adding product: " + product.getName());
+            log.info("Adding new product: name={}, price={}", product.getName(), product.getPrice());
             Product savedProduct = productService.addProduct(product);
-            System.out.println("Product saved with ID: " + savedProduct.getId());
+            log.info("Product saved successfully: id={}, name={}", savedProduct.getId(), savedProduct.getName());
             return ResponseEntity.ok(savedProduct);
         } catch (Exception e) {
-            System.err.println("Error adding product: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error adding product {}: {}", product.getName(), e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
@@ -38,9 +41,11 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product product) {
         try {
+            log.info("Updating product id={}: name={}", id, product.getName());
             Product updatedProduct = productService.updateProduct(id, product);
             return ResponseEntity.ok(updatedProduct);
         } catch (Exception e) {
+            log.error("Error updating product id={}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
@@ -49,9 +54,11 @@ public class ProductController {
     @PreAuthorize("hasAnyRole('ADMIN','SUPERADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
+            log.info("Deleting product id={}", id);
             productService.deleteProduct(id);
             return ResponseEntity.ok("Product deleted successfully");
         } catch (Exception e) {
+            log.error("Error deleting product id={}: {}", id, e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
@@ -60,11 +67,10 @@ public class ProductController {
     public ResponseEntity<List<Product>> getAllProducts() {
         try {
             List<Product> products = productService.getAllProducts();
-            System.out.println("Found " + products.size() + " products");
+            log.debug("Fetched {} products", products.size());
             return ResponseEntity.ok(products);
         } catch (Exception e) {
-            System.err.println("Error getting products: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error fetching all products: {}", e.getMessage(), e);
             return ResponseEntity.status(500).build();
         }
     }
@@ -76,7 +82,7 @@ public class ProductController {
 
     @PostMapping("/test")
     public ResponseEntity<?> testAdd(@RequestBody Product product) {
-        System.out.println("Test endpoint called with product: " + product.getName());
+        log.info("Test endpoint called with product: name={}", product.getName());
         return ResponseEntity.ok("Test successful: " + product.getName());
     }
 
@@ -103,10 +109,11 @@ public class ProductController {
     @PostMapping("/reduce-stock")
     public ResponseEntity<?> reduceStock(@RequestBody List<StockReductionRequest> items) {
         try {
+            log.info("Stock reduction requested for {} items", items != null ? items.size() : 0);
             productService.reduceStock(items);
             return ResponseEntity.ok("Stock reduced successfully");
         } catch (Exception e) {
-            System.err.println("Error reducing stock: " + e.getMessage());
+            log.error("Error reducing stock: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }
@@ -114,10 +121,11 @@ public class ProductController {
     @PostMapping("/revert-stock")
     public ResponseEntity<?> revertStock(@RequestBody List<StockReductionRequest> items) {
         try {
+            log.info("Stock revert requested for {} items", items != null ? items.size() : 0);
             productService.revertStock(items);
             return ResponseEntity.ok("Stock reverted successfully");
         } catch (Exception e) {
-            System.err.println("Error reverting stock: " + e.getMessage());
+            log.error("Error reverting stock: {}", e.getMessage(), e);
             return ResponseEntity.status(500).body("Error: " + e.getMessage());
         }
     }

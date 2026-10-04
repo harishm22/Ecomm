@@ -3,6 +3,8 @@ package com.simpleecom.productservice.service;
 import com.simpleecom.productservice.dto.StockReductionRequest;
 import com.simpleecom.productservice.model.Product;
 import com.simpleecom.productservice.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepository productRepository;
     private final RestTemplate restTemplate;
@@ -40,8 +44,8 @@ public class ProductService {
                 boolean sameCategory = (product.getCategory() == null && existing.getCategory() == null) ||
                         (product.getCategory() != null && product.getCategory().equalsIgnoreCase(existing.getCategory()));
                 if (sameCategory && Math.abs(product.getPrice() - existing.getPrice()) < 0.01) {
-                    System.out.println("[ProductService] Duplicate product submission detected for '" + 
-                        product.getName() + "' by admin '" + product.getAdminUsername() + "'. Returning existing product #" + existing.getId());
+                    log.warn("Duplicate product submission detected for '{}' by admin '{}'. Returning existing product id={}",
+                            product.getName(), product.getAdminUsername(), existing.getId());
                     return existing;
                 }
             }
@@ -115,7 +119,7 @@ public class ProductService {
                 }
             }
         } catch (Exception e) {
-            System.err.println("[ProductService] Could not fetch valid usernames: " + e.getMessage());
+            log.warn("Could not fetch valid usernames from user-service: {}", e.getMessage());
         }
         return Collections.emptySet();
     }
@@ -123,7 +127,7 @@ public class ProductService {
     // Fallback method executed when user-service is down, timing out, or circuit is
     // OPEN
     public Set<String> getValidUsernamesFallback(Throwable t) {
-        System.err.println("[CircuitBreaker fallback] Could not reach user-service. Reason: " + t.getMessage());
+        log.warn("CircuitBreaker fallback triggered: Could not reach user-service. Reason: {}", t.getMessage());
         return Collections.emptySet();
     }
 
@@ -153,7 +157,7 @@ public class ProductService {
                     int updatedQuantity = Math.max(0, product.getQuantity() - item.getQuantity());
                     product.setQuantity(updatedQuantity);
                     productRepository.save(product);
-                    System.out.println("[ProductService] Reduced stock for product #" + product.getId() + " (" + product.getName() + ") to " + updatedQuantity);
+                    log.info("Reduced stock for product id={} ({}) to {}", product.getId(), product.getName(), updatedQuantity);
                 }
             }
         }
@@ -171,7 +175,7 @@ public class ProductService {
                     int updatedQuantity = product.getQuantity() + item.getQuantity();
                     product.setQuantity(updatedQuantity);
                     productRepository.save(product);
-                    System.out.println("[ProductService] Reverted stock for product #" + product.getId() + " (" + product.getName() + ") to " + updatedQuantity);
+                    log.info("Reverted stock for product id={} ({}) to {}", product.getId(), product.getName(), updatedQuantity);
                 }
             }
         }

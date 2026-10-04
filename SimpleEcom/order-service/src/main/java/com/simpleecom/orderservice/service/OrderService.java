@@ -3,6 +3,8 @@ package com.simpleecom.orderservice.service;
 import com.simpleecom.orderservice.model.Order;
 import com.simpleecom.orderservice.model.OrderItem;
 import com.simpleecom.orderservice.repository.OrderRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,6 +15,8 @@ import java.util.Optional;
 @Service
 @Transactional
 public class OrderService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrderService.class);
 
     private final OrderRepository orderRepository;
 
@@ -27,7 +31,8 @@ public class OrderService {
             order.setIdempotencyKey(key);
             Optional<Order> existing = orderRepository.findByIdempotencyKey(key);
             if (existing.isPresent()) {
-                System.out.println("[OrderService] Idempotency match: Order already created with key: " + key + ". Returning existing order #" + existing.get().getId());
+                log.info("Idempotency match: Order already created with key {}. Returning existing order id={}",
+                        key, existing.get().getId());
                 return existing.get();
             }
         }

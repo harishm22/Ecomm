@@ -2,11 +2,15 @@ package com.simpleecom.productservice.config;
 
 import com.simpleecom.productservice.model.Product;
 import com.simpleecom.productservice.repository.ProductRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private final ProductRepository productRepository;
 
@@ -18,10 +22,10 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) throws Exception {
         try {
             long count = productRepository.count();
-            System.out.println("Current product count: " + count);
+            log.info("Current product count: {}", count);
 
             if (count == 0) {
-                System.out.println("Adding sample products...");
+                log.info("Adding sample products...");
                 productRepository.save(new Product(1000L, "iPhone 14", "Latest Apple smartphone with advanced features",
                         999.99, 50, "admin", null, "Electronics"));
                 productRepository.save(new Product(1001L, "Samsung Galaxy S23", "Premium Android smartphone", 899.99,
@@ -36,13 +40,12 @@ public class DataInitializer implements CommandLineRunner {
                         "admin", null, "Home"));
                 productRepository.save(new Product(1006L, "Football", "Professional quality football", 29.99, 40,
                         "admin", null, "Sports"));
-                System.out.println("Sample products added successfully!");
+                log.info("Sample products added successfully!");
             } else {
-                System.out.println("Products already exist, skipping initialization.");
+                log.info("Products already exist, skipping sample data initialization.");
             }
         } catch (Exception e) {
-            System.err.println("Error initializing data: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error initializing sample data: {}", e.getMessage(), e);
         }
     }
 }
