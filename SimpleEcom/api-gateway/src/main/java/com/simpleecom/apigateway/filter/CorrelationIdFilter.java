@@ -39,8 +39,12 @@ public class CorrelationIdFilter implements GlobalFilter, Ordered {
                 .header(CORRELATION_ID_HEADER, correlationId)
                 .build();
 
-        // Add correlation ID to client response headers
-        exchange.getResponse().getHeaders().add(CORRELATION_ID_HEADER, correlationId);
+        // Ensure correlation ID is on the response header
+        final String finalCorrelationId = correlationId;
+        exchange.getResponse().beforeCommit(() -> {
+            exchange.getResponse().getHeaders().set(CORRELATION_ID_HEADER, finalCorrelationId);
+            return Mono.empty();
+        });
 
         String path = request.getURI().getPath();
         String method = request.getMethod() != null ? request.getMethod().name() : "UNKNOWN";

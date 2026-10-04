@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - logging-net
+
   loki:
     image: grafana/loki:3.0.0
     container_name: simpleecom-loki
